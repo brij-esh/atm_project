@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Transaction {
+public class Transaction{
     private String transactionId;
     private String accountNumber;
     private String transactionType;
@@ -48,12 +48,8 @@ public class Transaction {
         this.closingBalance = closingBalance;
     }
 
-
-
-
     private String generateTransactionId(String transactionType, String accountNumber){
         return transactionType.substring(0,3)+accountNumber.substring(7)+hashCode()+random.nextInt(100000);
     }
-    
     
 }

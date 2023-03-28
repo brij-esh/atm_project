@@ -2,6 +2,7 @@ package com.atm.service.service_impl;
 
 import java.util.List;
 
+import com.atm.model.Transaction;
 import com.atm.model.User;
 import com.atm.repository.UserRepository;
 import com.atm.service.UserService;
@@ -12,6 +13,7 @@ import java.util.Base64;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository = new UserRepository();
+    private final TransactionServiceImpl transactionService = new TransactionServiceImpl();
 
     private String passwordEncoder(String rawPassword){
         return Base64.getEncoder().encodeToString(rawPassword.getBytes());
@@ -79,12 +81,15 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void depositFund(String accountNumber, Double amount) {
-        if (amount < 1) {
-            ConsoleLogger.print("Amount should not be less than 1 Rupees.", ConsoleColor.ANSI_RED, true, true);
+        if (amount <= 0) {
+            ConsoleLogger.print("Amount should not be negative or zero", ConsoleColor.ANSI_RED, true, true);
+            return;
         }
         User user = getUserByAccountNumber(accountNumber);
         user.setAccountBalance(user.getAccountBalance() + amount);
         userRepository.updateById(user, accountNumber);
+        Transaction transaction = new Transaction(user.getAccountNumber(), "Deposited",amount, user.getAccountBalance());
+        transactionService.save(transaction);
         ConsoleLogger.print(
                 "Your account with account no. ending with " + accountNumber.substring(8) + " credited " + amount
                         + " Rs. Your current balance is: " + user.getAccountBalance(),
@@ -94,11 +99,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public void withdrawFund(String accountNumber, Double amount) {
         User user = getUserByAccountNumber(accountNumber);
-        if (user.getAccountBalance() < amount) {
+        if(amount<=0){
+            ConsoleLogger.print("Amount should not be negative or zero.", ConsoleColor.ANSI_RED, false, false);
+        }else if (user.getAccountBalance() < amount) {
             ConsoleLogger.print("Insufficient Amount! ", ConsoleColor.ANSI_RED + ConsoleColor.ANSI_BOLD, true, true);
         } else {
             user.setAccountBalance(user.getAccountBalance() - amount);
             userRepository.updateById(user, accountNumber);
+            Transaction transaction = new Transaction(user.getAccountNumber(), "Withdrawal",amount, user.getAccountBalance());
+            transactionService.save(transaction);
             ConsoleLogger.print(
                     "Your account with account no. ending with " + accountNumber.substring(8) + " debited " + amount
                             + " Rs. Your current balance is: " + user.getAccountBalance(),
@@ -123,6 +132,11 @@ public class UserServiceImpl implements UserService {
             sourceUser.setAccountBalance(sourceUser.getAccountBalance() - amount);
             updateByUserAccountNumber(sourceUser, sourceAccountNumber);
             updateByUserAccountNumber(destinationUser, destinationAccountNumber);
+            Transaction transaction1 = new Transaction(sourceUser.getAccountNumber(), "Transfer",amount, destinationAccountNumber, sourceUser.getAccountBalance());
+        Transaction transaction2 = new Transaction(destinationAccountNumber, "Received",amount,sourceUser.getAccountNumber(), destinationUser.getAccountBalance());
+
+        transactionService.save(transaction1);
+        transactionService.save(transaction2);
             ConsoleLogger.print(amount + " Rs. Successfully transferred! ",
                     ConsoleColor.ANSI_RED + ConsoleColor.ANSI_BOLD, true, false);
             ConsoleLogger.print("Your current total balance is: " + sourceUser.getAccountBalance().toString(),

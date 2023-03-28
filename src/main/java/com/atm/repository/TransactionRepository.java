@@ -15,7 +15,7 @@ import com.atm.style.ConsoleLogger;
 public class TransactionRepository {
 
     private static final String INSERT = "INSERT INTO transactions(transactionId, accountNumber, transactionType, amount, localDateTime, sourceOrDestinationAccountNumber, closingBalance) VALUES(?, ?, ?, ?, ?, ?, ?)";
-    private static final String FIND_ALL_BY_ID = "SELECT * FROM transactions WHERE accountNumber = ?";
+    private static final String FIND_ALL_BY_ID = "SELECT * FROM transactions WHERE accountNumber = ? ORDER BY localDateTime ASC";
 
 
     private static Connection connection = JdbcConnection.getConnection();

@@ -73,10 +73,22 @@ public class UserController {
                 true, false);
         ConsoleLogger.print("Please enter your first name", ConsoleColor.ANSI_BLUE, false, false);
         String firstName = sc.nextLine();
+        while(!firstName.matches("[a-zA-Z]+")){
+            ConsoleLogger.print("First name must contain only alphabets. Please Enter you first name again!", ConsoleColor.ANSI_RED, false, true);
+            firstName = sc.nextLine();
+        }
         ConsoleLogger.print("Please enter your last name", ConsoleColor.ANSI_BLUE, false, false);
         String lastName = sc.nextLine();
-        ConsoleLogger.print("Please enter your password", ConsoleColor.ANSI_BLUE, false, false);
+        while(!lastName.matches("[a-zA-Z]+")){
+            ConsoleLogger.print("Last name must contain only alphabets. Please Enter you last name again!", ConsoleColor.ANSI_RED, false, true);
+            lastName = sc.nextLine();
+        }
+        ConsoleLogger.print("Please set your password: Password must contain capital alphabet, one special character and numeric value!", ConsoleColor.ANSI_BLUE, false, false);
         String password = sc.nextLine();
+        while(!password.matches("^(?=.*[A-Z])(?=.*[0-9])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$")){
+            ConsoleLogger.print("Password must contain capital alphabet, one special character and numeric value!", ConsoleColor.ANSI_RED, false, true);
+            password = sc.nextLine();
+        }
         ConsoleLogger.print("Please enter your account type:", ConsoleColor.ANSI_BLUE, false, false);
         ConsoleLogger.print("1. SAVING ACCOUNT", ConsoleColor.ANSI_BLUE, false, false);
         ConsoleLogger.print("2. CURRENT ACCOUNT", ConsoleColor.ANSI_BLUE, false, false);
@@ -112,7 +124,9 @@ public class UserController {
                 printTransaction(user);
             }else if (option == 6) {
                 changePassword(user);
-            } else if (option == 7) {
+            }else if(option==7){
+                printUserDetails(user);
+            }else if (option == 8) {
                 isLogin = false;
                 welcomeMessage();
             }
@@ -126,7 +140,8 @@ public class UserController {
         ConsoleLogger.print("4. Transfer Fund", ConsoleColor.ANSI_GREEN, false, false);
         ConsoleLogger.print("5. Print Transactions", ConsoleColor.ANSI_GREEN, false, false);
         ConsoleLogger.print("6. Change Password", ConsoleColor.ANSI_GREEN, false, false);
-        ConsoleLogger.print("7. Log out", ConsoleColor.ANSI_GREEN, false, false);
+        ConsoleLogger.print("7. Print Current User Details", ConsoleColor.ANSI_GREEN, false, false);
+        ConsoleLogger.print("8. Log out", ConsoleColor.ANSI_GREEN, false, false);
     }
 
     private void checkBalance(User user) {
@@ -141,8 +156,6 @@ public class UserController {
         } catch (InputMismatchException e) {
             showErrorMessage();
         }
-        Transaction transaction = new Transaction(user.getAccountNumber(), "Withdrawal",amount, user.getAccountBalance()-amount);
-        transactionService.save(transaction);
         service.withdrawFund(user.getAccountNumber(), amount);
     }
 
@@ -154,14 +167,18 @@ public class UserController {
         } catch (InputMismatchException e) {
             showErrorMessage();
         }
-        Transaction transaction = new Transaction(user.getAccountNumber(), "Deposited",amount, user.getAccountBalance()+amount);
-        transactionService.save(transaction);
         service.depositFund(user.getAccountNumber(), amount);
     }
 
     private void transfer(User user) {
         ConsoleLogger.print("Please Enter destination user account number:", ConsoleColor.ANSI_PURPLE, false, false);
         String destinationAccountNumber = sc.nextLine();
+        User destinationUser = service.getUserByAccountNumber(destinationAccountNumber);
+        while(destinationUser==null){
+            ConsoleLogger.print("Account does not exist. Please enter correct destination user account number:", ConsoleColor.ANSI_PURPLE, false, false);
+            destinationAccountNumber = sc.nextLine();
+            destinationUser = service.getUserByAccountNumber(destinationAccountNumber);
+        }
         ConsoleLogger.print("Please Enter amount to transfer", ConsoleColor.ANSI_PURPLE, false, false);
 
         Double amount = 0.0;
@@ -170,12 +187,6 @@ public class UserController {
         } catch (InputMismatchException e) {
             showErrorMessage();
         }
-        User destinationUser = service.getUserByAccountNumber(destinationAccountNumber);
-        Transaction transaction1 = new Transaction(user.getAccountNumber(), "Transfer",amount, destinationAccountNumber, user.getAccountBalance()-amount);
-        Transaction transaction2 = new Transaction(destinationAccountNumber, "Received",amount,user.getAccountNumber(), destinationUser.getAccountBalance()+amount);
-
-        transactionService.save(transaction1);
-        transactionService.save(transaction2);
         service.transferFund(user.getAccountNumber(), destinationAccountNumber, amount);
     }
 
@@ -198,6 +209,10 @@ public class UserController {
             ConsoleLogger.print("Transaction date: "+transaction.getTransactionDate(), ConsoleColor.ANSI_PURPLE, false, false);   
             ConsoleLogger.print("Closing balance: "+transaction.getClosingBalance(), ConsoleColor.ANSI_PURPLE, false, false);
         }
+    }
+
+    private void printUserDetails(User user){
+        service.printCurrentUserDetails(user.getAccountNumber());
     }
 
     private void showWrongInputMessage() {
