@@ -196,7 +196,7 @@ public class UserController {
             ConsoleLogger.print("Amount: "+transaction.getAmount(), ConsoleColor.ANSI_PURPLE, false, false);
             ConsoleLogger.print("Source/Destination account number: "+(transaction.getSourceOrDestinationAccountNumber()==null||transaction.getSourceOrDestinationAccountNumber().isEmpty()? null: transaction.getSourceOrDestinationAccountNumber()), ConsoleColor.ANSI_PURPLE, false, false);
             ConsoleLogger.print("Transaction date: "+transaction.getTransactionDate(), ConsoleColor.ANSI_PURPLE, false, false);   
-            ConsoleLogger.print("Transaction date: "+transaction.getClosingBalance(), ConsoleColor.ANSI_PURPLE, false, false);
+            ConsoleLogger.print("Closing balance: "+transaction.getClosingBalance(), ConsoleColor.ANSI_PURPLE, false, false);
         }
     }
 
